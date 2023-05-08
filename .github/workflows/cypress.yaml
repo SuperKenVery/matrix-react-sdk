@@ -140,7 +140,7 @@ jobs:
               run: sed -i "s/script-src /script-src 'unsafe-eval' /" webapp/index.html
 
             - name: Run Cypress tests
-              uses: cypress-io/github-action@59c3b9b4a1a6e623c29806797d849845443487d1
+              uses: cypress-io/github-action@b0692fc3924d866e58ea78055bfefd58795c8df2
               with:
                   working-directory: matrix-react-sdk
                   # The built-in Electron runner seems to grind to a halt trying
