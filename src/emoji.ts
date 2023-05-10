@@ -16,12 +16,13 @@ limitations under the License.
 
 import EMOJIBASE from "emojibase-data/en/compact.json";
 import SHORTCODES from "emojibase-data/en/shortcodes/iamcal.json";
+import { Group } from "emojibase/src/types";
 
 export interface IEmoji {
     label: string;
-    group: number;
+    group?: Group;
     hexcode: string;
-    order: number;
+    order?: number;
     shortcodes: string[];
     tags?: string[];
     unicode: string;
@@ -74,7 +75,7 @@ export const DATA_BY_CATEGORY: Record<string, IEmoji[]> = {
 };
 
 // Store various mappings from unicode/emoticon/shortcode to the Emoji objects
-export const EMOJI: IEmoji[] = EMOJIBASE.map((emojiData: Omit<IEmoji, "shortcodes">) => {
+export const EMOJI: IEmoji[] = EMOJIBASE.map((emojiData) => {
     // If there's ever a gap in shortcode coverage, we fudge it by
     // filling it in with the emoji's CLDR annotation
     const shortcodeData = SHORTCODES[emojiData.hexcode] ?? [emojiData.label.toLowerCase().replace(/\W+/g, "_")];

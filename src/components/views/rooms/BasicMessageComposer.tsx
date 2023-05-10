@@ -107,7 +107,7 @@ interface IProps {
     initialCaret?: DocumentOffset;
     disabled?: boolean;
 
-    onChange?(selection: Caret, inputType?: string, diff?: IDiff): void;
+    onChange?(selection?: Caret, inputType?: string, diff?: IDiff): void;
     onPaste?(event: ClipboardEvent<HTMLDivElement>, model: EditorModel): boolean;
 }
 
@@ -230,7 +230,7 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
         }
     }
 
-    private updateEditorState = (selection: Caret, inputType?: string, diff?: IDiff): void => {
+    private updateEditorState = (selection?: Caret, inputType?: string, diff?: IDiff): void => {
         if (!this.editorRef.current) return;
         renderModel(this.editorRef.current, this.props.model);
         if (selection) {

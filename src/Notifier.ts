@@ -132,7 +132,7 @@ class NotifierClass {
         let msg = this.notificationMessageForEvent(ev);
         if (!msg) return;
 
-        let title;
+        let title: string;
         if (!ev.sender || room.name === ev.sender.name) {
             title = room.name;
             // notificationMessageForEvent includes sender, but we already have the sender here
@@ -151,6 +151,8 @@ class NotifierClass {
             if (ev.getContent().body && (!msgType || !msgTypeHandlers.hasOwnProperty(msgType))) {
                 msg = ev.getContent().body;
             }
+        } else {
+            title = _t("Notification");
         }
 
         if (!this.isBodyEnabled()) {
