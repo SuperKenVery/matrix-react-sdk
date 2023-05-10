@@ -48,10 +48,9 @@ import SpaceContextMenu from "../context_menus/SpaceContextMenu";
 import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import { useRovingTabIndex } from "../../../accessibility/RovingTabIndex";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
+import { XOR } from "../../../@types/common";
 
 interface IButtonProps extends Omit<ComponentProps<typeof AccessibleTooltipButton>, "title" | "onClick"> {
-    space?: Room;
-    spaceKey?: SpaceKey;
     className?: string;
     selected?: boolean;
     label: string;
@@ -63,7 +62,16 @@ interface IButtonProps extends Omit<ComponentProps<typeof AccessibleTooltipButto
     onClick?(ev?: ButtonEvent): void;
 }
 
-export const SpaceButton = forwardRef<HTMLElement, IButtonProps>(
+type SpaceProps = XOR<
+    {
+        space: Room;
+    },
+    {
+        spaceKey: SpaceKey;
+    }
+>;
+
+export const SpaceButton = forwardRef<HTMLElement, SpaceProps & IButtonProps>(
     (
         {
             space,
@@ -84,6 +92,7 @@ export const SpaceButton = forwardRef<HTMLElement, IButtonProps>(
         const [menuDisplayed, handle, openMenu, closeMenu] = useContextMenu<HTMLElement>(ref);
         const [onFocus, isActive] = useRovingTabIndex(handle);
         const tabIndex = isActive ? 0 : -1;
+        const key = space ? space.roomId : spaceKey;
 
         let avatar = (
             <div className="mx_SpaceButton_avatarPlaceholder">
@@ -94,7 +103,7 @@ export const SpaceButton = forwardRef<HTMLElement, IButtonProps>(
             avatar = <RoomAvatar width={avatarSize} height={avatarSize} room={space} />;
         }
 
-        let notifBadge;
+        let notifBadge: JSX.Element | undefined;
         if (notificationState) {
             let ariaLabel = _t("Jump to first unread room.");
             if (space?.getMyMembership() === "invite") {
@@ -104,7 +113,7 @@ export const SpaceButton = forwardRef<HTMLElement, IButtonProps>(
             const jumpToNotification = (ev: MouseEvent): void => {
                 ev.stopPropagation();
                 ev.preventDefault();
-                SpaceStore.instance.setActiveRoomInSpace(spaceKey ?? space.roomId);
+                SpaceStore.instance.setActiveRoomInSpace(key);
             };
 
             notifBadge = (
@@ -133,8 +142,8 @@ export const SpaceButton = forwardRef<HTMLElement, IButtonProps>(
         }
 
         const viewSpaceHome = (): void =>
-            defaultDispatcher.dispatch({ action: Action.ViewRoom, room_id: space.roomId });
-        const activateSpace = (): void => SpaceStore.instance.setActiveSpace(spaceKey ?? space.roomId);
+            defaultDispatcher.dispatch({ action: Action.ViewRoom, room_id: space!.roomId });
+        const activateSpace = (): void => SpaceStore.instance.setActiveSpace(key);
         const onClick = props.onClick ?? (selected && space ? viewSpaceHome : activateSpace);
 
         return (
