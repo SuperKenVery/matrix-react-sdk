@@ -23,6 +23,7 @@ import AutoHideScrollbar from "./AutoHideScrollbar";
 import { getKeyBindingsManager } from "../../KeyBindingsManager";
 import ResizeNotifier from "../../utils/ResizeNotifier";
 import { KeyBindingAction } from "../../accessibility/KeyboardShortcuts";
+import { XOR } from "../../@types/common";
 
 // The amount of extra scroll distance to allow prior to unfilling.
 // See getExcessHeight.
@@ -47,7 +48,7 @@ interface IProps {
      * scroll down to show the new element, rather than preserving the
      * existing view.
      */
-    stickyBottom?: boolean;
+    stickyBottom: boolean;
 
     /* startAtBottom: if set to true, the view is assumed to start
      * scrolled to the bottom.
@@ -56,7 +57,7 @@ interface IProps {
      * behaviour stays the same for other uses of ScrollPanel.
      * If so, let's remove this parameter down the line.
      */
-    startAtBottom?: boolean;
+    startAtBottom: boolean;
 
     /* className: classnames to add to the top-level div
      */
@@ -89,7 +90,7 @@ interface IProps {
      * direction (at this time) - which will stop the pagination cycle until
      * the user scrolls again.
      */
-    onFillRequest?(backwards: boolean): Promise<boolean>;
+    onFillRequest(backwards: boolean): Promise<boolean>;
 
     /* onUnfillRequest(backwards): a callback which is called on scroll when
      * there are children elements that are far out of view and could be removed
@@ -100,11 +101,11 @@ interface IProps {
      * first element to remove if removing from the front/bottom, and last element
      * to remove if removing from the back/top.
      */
-    onUnfillRequest?(backwards: boolean, scrollToken: string): void;
+    onUnfillRequest(backwards: boolean, scrollToken: string): void;
 
     /* onScroll: a callback which is called whenever any scroll happens.
      */
-    onScroll?(event: Event): void;
+    onScroll(event: Event): void;
 }
 
 /* This component implements an intelligent scrolling list.
@@ -148,13 +149,23 @@ interface IProps {
  * offset as normal.
  */
 
-export interface IScrollState {
-    stuckAtBottom?: boolean;
-    trackedNode?: HTMLElement;
+type TrackedNodeState = XOR<
+    {
+        trackedNode: HTMLElement;
+        bottomOffset: number;
+        pixelOffset: number;
+    },
+    {}
+> & {
+    stuckAtBottom: false;
     trackedScrollToken?: string;
-    bottomOffset?: number;
-    pixelOffset?: number;
+};
+
+interface StuckAtBottomState {
+    stuckAtBottom: true;
 }
+
+export type IScrollState = TrackedNodeState | StuckAtBottomState;
 
 interface IPreventShrinkingState {
     offsetFromBottom: number;
@@ -544,7 +555,7 @@ export default class ScrollPanel extends React.Component<IProps> {
     public resetScrollState = (): void => {
         this.scrollState = {
             stuckAtBottom: this.props.startAtBottom,
-        };
+        } as IScrollState;
         this.bottomGrowth = 0;
         this.minListHeight = 0;
         this.scrollTimeout = new Timer(100);
@@ -675,7 +686,12 @@ export default class ScrollPanel extends React.Component<IProps> {
             debuglog("unable to save scroll state: found no children in the viewport");
             return;
         }
-        const scrollToken = node!.dataset.scrollTokens?.split(",")[0];
+        const scrollToken = node.dataset.scrollTokens?.split(",")[0];
+        if (!scrollToken) {
+            debuglog("unable to save scroll state: found no scroll tokens");
+            return;
+        }
+
         debuglog("saving anchored scroll state to message", scrollToken);
         const bottomOffset = this.topFromBottom(node);
         this.scrollState = {
@@ -698,7 +714,7 @@ export default class ScrollPanel extends React.Component<IProps> {
         } else if (scrollState.trackedScrollToken) {
             const itemlist = this.itemlist.current;
             const trackedNode = this.getTrackedNode();
-            if (trackedNode) {
+            if (scrollState.trackedNode && trackedNode) {
                 const newBottomOffset = this.topFromBottom(trackedNode);
                 const bottomDiff = newBottomOffset - scrollState.bottomOffset;
                 this.bottomGrowth += bottomDiff;
@@ -786,6 +802,7 @@ export default class ScrollPanel extends React.Component<IProps> {
 
     private getTrackedNode(): HTMLElement | undefined {
         const scrollState = this.scrollState;
+        if (scrollState.stuckAtBottom) return undefined;
         const trackedNode = scrollState.trackedNode;
 
         if (!trackedNode?.parentElement && this.itemlist.current) {

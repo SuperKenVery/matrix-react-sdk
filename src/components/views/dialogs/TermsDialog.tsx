@@ -87,7 +87,7 @@ export default class TermsDialog extends React.PureComponent<ITermsDialogProps, 
         );
     };
 
-    private nameForServiceType(serviceType: SERVICE_TYPES, host: string): JSX.Element {
+    private nameForServiceType(serviceType: SERVICE_TYPES, host: string | null): JSX.Element {
         switch (serviceType) {
             case SERVICE_TYPES.IS:
                 return (

@@ -40,7 +40,7 @@ interface IProps {
 }
 
 interface IState {
-    callState: CallState | CustomCallState;
+    callState?: CallState | CustomCallState;
     silenced: boolean;
     narrow: boolean;
     length: number;
@@ -125,7 +125,7 @@ export default class LegacyCallEvent extends React.PureComponent<IProps, IState>
         );
     }
 
-    private renderContent(state: CallState | CustomCallState): JSX.Element {
+    private renderContent(state?: CallState | CustomCallState): JSX.Element {
         if (state === CallState.Ringing) {
             let silenceIcon;
             if (!this.state.narrow) {
