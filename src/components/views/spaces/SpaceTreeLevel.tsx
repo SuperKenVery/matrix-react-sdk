@@ -55,7 +55,6 @@ interface IButtonProps extends Omit<ComponentProps<typeof AccessibleTooltipButto
     selected?: boolean;
     label: string;
     contextMenuTooltip?: string;
-    notificationState?: NotificationState;
     isNarrow?: boolean;
     avatarSize?: number;
     ContextMenuComponent?: ComponentType<ComponentProps<typeof SpaceContextMenu>>;
@@ -63,11 +62,18 @@ interface IButtonProps extends Omit<ComponentProps<typeof AccessibleTooltipButto
 }
 
 type SpaceProps = XOR<
+    XOR<
+        {
+            space: Room;
+            notificationState?: NotificationState;
+        },
+        {
+            spaceKey: SpaceKey;
+            notificationState?: NotificationState;
+        }
+    >,
     {
-        space: Room;
-    },
-    {
-        spaceKey: SpaceKey;
+        onClick(ev?: ButtonEvent): void;
     }
 >;
 
@@ -92,7 +98,6 @@ export const SpaceButton = forwardRef<HTMLElement, SpaceProps & IButtonProps>(
         const [menuDisplayed, handle, openMenu, closeMenu] = useContextMenu<HTMLElement>(ref);
         const [onFocus, isActive] = useRovingTabIndex(handle);
         const tabIndex = isActive ? 0 : -1;
-        const key = space ? space.roomId : spaceKey;
 
         let avatar = (
             <div className="mx_SpaceButton_avatarPlaceholder">
@@ -105,6 +110,7 @@ export const SpaceButton = forwardRef<HTMLElement, SpaceProps & IButtonProps>(
 
         let notifBadge: JSX.Element | undefined;
         if (notificationState) {
+            const key = space?.roomId ?? spaceKey!;
             let ariaLabel = _t("Jump to first unread room.");
             if (space?.getMyMembership() === "invite") {
                 ariaLabel = _t("Jump to first invite.");
@@ -143,7 +149,7 @@ export const SpaceButton = forwardRef<HTMLElement, SpaceProps & IButtonProps>(
 
         const viewSpaceHome = (): void =>
             defaultDispatcher.dispatch({ action: Action.ViewRoom, room_id: space!.roomId });
-        const activateSpace = (): void => SpaceStore.instance.setActiveSpace(key);
+        const activateSpace = (): void => SpaceStore.instance.setActiveSpace(space?.roomId ?? spaceKey!);
         const onClick = props.onClick ?? (selected && space ? viewSpaceHome : activateSpace);
 
         return (
