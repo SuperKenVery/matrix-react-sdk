@@ -719,7 +719,7 @@ export class SendMessageComposer extends React.Component<ISendMessageComposerPro
                                 this.props.relation,
                                 this.props.mxClient,
                                 this.context.replyToEvent,
-                            ).then();
+                            ).then(()=>{});
                         },
                         (error) => {
                             console.log(error);
