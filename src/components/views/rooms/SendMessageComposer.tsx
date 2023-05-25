@@ -701,7 +701,7 @@ export class SendMessageComposer extends React.Component<ISendMessageComposerPro
                 // Fallback to internal onPaste handler
                 return false;
             }
-            const imgSrc = imgDoc!.querySelector("img")!.src;
+            const imgSrc = imgDoc.querySelector("img")!.src;
 
             fetch(imgSrc).then(
                 (response) => {
@@ -719,7 +719,7 @@ export class SendMessageComposer extends React.Component<ISendMessageComposerPro
                                 this.props.relation,
                                 this.props.mxClient,
                                 this.context.replyToEvent,
-                            );
+                            ).then();
                         },
                         (error) => {
                             console.log(error);
